@@ -1,78 +1,155 @@
 package http
 
 import (
+	"fmt"
+	"main/internal/application/service"
 	"main/internal/domain/model"
-	service "main/internal/services"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gofiber/fiber/v2/log"
 )
 
 type TodoHandler struct {
-	todoService service.TodoService
+	Service *service.TodoService
 }
 
-func NewTodoHandler() *TodoHandler {
-	return &TodoHandler{
-		todoService: *service.NewTodoService(),
-	}
+func NewTodoHandler(service *service.TodoService) *TodoHandler {
+	return &TodoHandler{Service: service}
 }
 
-func (h *TodoHandler) List(ctx *gin.Context) {
-	todo := model.Todo{
-		Id:      0,
-		Content: "TEST",
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"Message": todo,
-	})
-}
-
-func (h *TodoHandler) Get(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-
-	id, err := strconv.Atoi(idParam)
+func (handler *TodoHandler) List(context *gin.Context) {
+	todos, err := handler.Service.GetAllTodo()
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "ERROR",
 			"message": err.Error(),
 		})
+		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"Message": id,
+	context.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+		"data":   todos,
 	})
 }
 
-func (h *TodoHandler) Create(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"Message": "CREATE",
-	})
-}
+func (handler *TodoHandler) Get(context *gin.Context) {
+	id := context.Param("id")
 
-func (h *TodoHandler) Update(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"Message": "UPDATE",
-	})
-}
+	if id == "" {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"status":  "ERROR",
+			"message": "ERROR ID IS EMPTY",
+		})
+		return
+	}
 
-func (h *TodoHandler) Delete(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-
-	id, err := strconv.Atoi(idParam)
+	todo, err := handler.Service.GetTodo(id)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(http.StatusBadRequest, gin.H{
+			"status":  "ERROR",
 			"message": err.Error(),
 		})
+		return
 	}
 
-	log.Info(id)
+	context.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+		"data":   todo,
+	})
+}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"Message": "DELETE",
+func (handler *TodoHandler) Create(context *gin.Context) {
+	var newTodo model.Todo
+
+	err := context.ShouldBindJSON(&newTodo)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"status":  "ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = handler.Service.CreateTodo(newTodo)
+
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	context.JSON(http.StatusCreated, gin.H{
+		"status":  "CREATED",
+		"message": "CREATE TODO SUCCESS",
+	})
+}
+
+func (handler *TodoHandler) Update(context *gin.Context) {
+	id := context.Param("id")
+
+	if id == "" {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "ERROR",
+			"message": "ERROR ID IS EMPTY",
+		})
+		return
+	}
+
+	var todoUpdate model.Todo
+
+	err := context.ShouldBindJSON(&todoUpdate)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"status":  "ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	_, err = handler.Service.UpdateTodo(id, todoUpdate)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"status":  "ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"status":  "UPDATED",
+		"message": fmt.Sprintf("UPDATE TODO ID: %s SUCCESS", id),
+	})
+}
+
+func (handler *TodoHandler) Delete(context *gin.Context) {
+	id := context.Param("id")
+
+	if id == "" {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "ERROR ID IS EMPTY",
+		})
+		return
+	}
+
+	err := handler.Service.DeleteTodo(id)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"status":  "DELETED",
+		"message": fmt.Sprintf("DELETE TODO ID: {%s} SUCCESS", id),
 	})
 }

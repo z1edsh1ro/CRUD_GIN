@@ -1,22 +1,29 @@
 package router
 
 import (
-	handler "main/internal/handlers"
+	"main/internal/adapter/http"
+	"main/internal/adapter/repository"
+	"main/internal/application/service"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRoutes() *gin.Engine {
+func SetupRoutes(mongoClient mongo.Client) *gin.Engine {
 	r := gin.Default()
 
-	todoHandler := handler.NewTodoHandler()
+	todoRepository := repository.NewTodoRepository(&mongoClient)
+	todoService := service.NewTodoService(*todoRepository)
+	todoHandler := http.NewTodoHandler(todoService)
 
-	api := r.Group("/api")
-	api.GET("/", todoHandler.List)
-	api.GET("/:id", todoHandler.Get)
-	api.POST("/", todoHandler.Create)
-	api.PUT("/", todoHandler.Update)
-	api.DELETE("/:id", todoHandler.Delete)
+	api := r.Group("/api/todo")
+	{
+		api.GET("/", todoHandler.List)
+		api.GET("/:id", todoHandler.Get)
+		api.POST("/", todoHandler.Create)
+		api.PUT("/:id", todoHandler.Update)
+		api.DELETE("/:id", todoHandler.Delete)
+	}
 
 	return r
 }
