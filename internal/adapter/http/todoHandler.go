@@ -150,6 +150,6 @@ func (handler *TodoHandler) Delete(context *gin.Context) {
 
 	context.JSON(http.StatusOK, gin.H{
 		"status":  "DELETED",
-		"message": fmt.Sprintf("DELETE TODO ID: {%s} SUCCESS", id),
+		"message": fmt.Sprintf("DELETE TODO ID: %s SUCCESS", id),
 	})
 }

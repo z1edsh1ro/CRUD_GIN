@@ -13,9 +13,9 @@ import (
 var collection *mongo.Collection
 
 func Connection() (*mongo.Client, error) {
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file %w", err)
 		return nil, err
 	}
 

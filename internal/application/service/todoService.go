@@ -2,34 +2,30 @@ package service
 
 import (
 	"fmt"
-	"main/internal/adapter/repository"
 	"main/internal/domain/model"
+	"main/internal/domain/port"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type TodoService struct {
-	Repo repository.DBTodoRepository
-}
-
-func NewTodoService(repo repository.DBTodoRepository) *TodoService {
-	return &TodoService{Repo: repo}
+	Port port.TodoRepository
 }
 
 func (service *TodoService) GetAllTodo() ([]model.Todo, error) {
-	return service.Repo.GetAll()
+	return service.Port.GetAll()
 }
 
 func (service *TodoService) GetTodo(id string) (model.Todo, error) {
-	return service.Repo.GetById(id)
+	return service.Port.GetById(id)
 }
 
 func (service *TodoService) CreateTodo(entry model.Todo) error {
-	return service.Repo.Create(entry)
+	return service.Port.Create(entry)
 }
 
 func (service *TodoService) UpdateTodo(id string, entry model.Todo) (*mongo.UpdateResult, error) {
-	todo, err := service.Repo.GetById(id)
+	todo, err := service.Port.GetById(id)
 
 	if err != nil {
 		return nil, err
@@ -39,9 +35,9 @@ func (service *TodoService) UpdateTodo(id string, entry model.Todo) (*mongo.Upda
 		return nil, fmt.Errorf("ERROR TODO ID: %s NOT FOUND", id)
 	}
 
-	return service.Repo.Update(id, entry)
+	return service.Port.Update(id, entry)
 }
 
 func (service *TodoService) DeleteTodo(id string) error {
-	return service.Repo.Delete(id)
+	return service.Port.Delete(id)
 }

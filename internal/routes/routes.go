@@ -4,16 +4,17 @@ import (
 	"main/internal/adapter/http"
 	"main/internal/adapter/repository"
 	"main/internal/application/service"
+	"main/internal/domain/port"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRoutes(mongoClient mongo.Client) *gin.Engine {
+func SetupRoutes(mongoClient *mongo.Client) *gin.Engine {
 	r := gin.Default()
 
-	todoRepository := repository.NewTodoRepository(&mongoClient)
-	todoService := service.NewTodoService(*todoRepository)
+	var todoRepository port.TodoRepository = repository.NewTodoRepository(mongoClient)
+	todoService := &service.TodoService{Port: todoRepository}
 	todoHandler := http.NewTodoHandler(todoService)
 
 	api := r.Group("/api/todo")
