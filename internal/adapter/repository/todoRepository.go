@@ -29,7 +29,7 @@ func (repo *DBTodoRepository) GetAll() ([]model.Todo, error) {
 	cursor, err := repo.Collection.Find(context.TODO(), bson.D{})
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
@@ -49,14 +49,14 @@ func (repo *DBTodoRepository) GetById(id string) (model.Todo, error) {
 	mongoId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return model.Todo{}, err
 	}
 
 	err = repo.Collection.FindOne(context.Background(), bson.M{"_id": mongoId}).Decode(&todo)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return model.Todo{}, err
 	}
 
@@ -72,7 +72,7 @@ func (repo *DBTodoRepository) Create(entry model.Todo) error {
 	})
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return err
 	}
 
@@ -101,7 +101,7 @@ func (repo *DBTodoRepository) Update(id string, entry model.Todo) (*mongo.Update
 	)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return nil, err
 	}
 
@@ -112,7 +112,7 @@ func (repo *DBTodoRepository) Delete(id string) error {
 	mongoId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return err
 	}
 
@@ -122,7 +122,7 @@ func (repo *DBTodoRepository) Delete(id string) error {
 	)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		return err
 	}
 

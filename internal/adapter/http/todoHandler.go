@@ -48,7 +48,7 @@ func (handler *TodoHandler) Get(context *gin.Context) {
 	todo, err := handler.Service.GetTodo(id)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "ERROR",
 			"message": err.Error(),
 		})
@@ -116,7 +116,7 @@ func (handler *TodoHandler) Update(context *gin.Context) {
 	_, err = handler.Service.UpdateTodo(id, todoUpdate)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "ERROR",
 			"message": err.Error(),
 		})
@@ -134,6 +134,7 @@ func (handler *TodoHandler) Delete(context *gin.Context) {
 
 	if id == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
+			"status":  "ERROR",
 			"message": "ERROR ID IS EMPTY",
 		})
 		return
@@ -142,7 +143,8 @@ func (handler *TodoHandler) Delete(context *gin.Context) {
 	err := handler.Service.DeleteTodo(id)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "ERROR",
 			"message": err.Error(),
 		})
 		return

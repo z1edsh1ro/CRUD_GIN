@@ -10,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var collection *mongo.Collection
-
 func Connection() (*mongo.Client, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -39,8 +37,4 @@ func Connection() (*mongo.Client, error) {
 	log.Println("Conected to mongo...")
 
 	return client, nil
-}
-
-func GetCollectionPointer() *mongo.Collection {
-	return collection
 }
