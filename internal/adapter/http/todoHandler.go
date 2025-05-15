@@ -10,10 +10,10 @@ import (
 )
 
 type TodoHandler struct {
-	Service *service.TodoService
+	Service service.TodoService
 }
 
-func NewTodoHandler(service *service.TodoService) *TodoHandler {
+func NewTodoHandler(service service.TodoService) *TodoHandler {
 	return &TodoHandler{Service: service}
 }
 
@@ -113,7 +113,7 @@ func (handler *TodoHandler) Update(context *gin.Context) {
 		return
 	}
 
-	_, err = handler.Service.UpdateTodo(id, todoUpdate)
+	err = handler.Service.UpdateTodo(id, todoUpdate)
 
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{

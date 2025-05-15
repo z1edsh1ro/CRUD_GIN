@@ -26,6 +26,6 @@ func main() {
 		}
 	}()
 
-	r := router.SetupRoutes(mongoClient)
+	r := router.New(mongoClient)
 	r.Run()
 }

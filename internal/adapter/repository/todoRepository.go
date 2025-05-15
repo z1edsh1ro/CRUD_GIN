@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 	"main/internal/domain/model"
 	"time"
 
@@ -11,25 +10,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type DBTodoRepository struct {
+type TodoCollection struct {
 	Collection *mongo.Collection
 }
 
-func NewTodoRepository(client *mongo.Client) *DBTodoRepository {
+func NewTodoRepository(client *mongo.Client) *TodoCollection {
 	conllection := client.Database("todo_db").Collection("todos")
 
-	return &DBTodoRepository{
-		Collection: conllection,
-	}
+	return &TodoCollection{Collection: conllection}
 }
 
-func (repo *DBTodoRepository) GetAll() ([]model.Todo, error) {
+func (repo *TodoCollection) GetAll() ([]model.Todo, error) {
 	var todos []model.Todo
 
 	cursor, err := repo.Collection.Find(context.TODO(), bson.D{})
 
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
@@ -43,27 +39,19 @@ func (repo *DBTodoRepository) GetAll() ([]model.Todo, error) {
 	return todos, nil
 }
 
-func (repo *DBTodoRepository) GetById(id string) (model.Todo, error) {
+func (repo *TodoCollection) GetById(id primitive.ObjectID) (model.Todo, error) {
 	var todo model.Todo
 
-	mongoId, err := primitive.ObjectIDFromHex(id)
+	err := repo.Collection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&todo)
 
 	if err != nil {
-		log.Println(err)
-		return model.Todo{}, err
-	}
-
-	err = repo.Collection.FindOne(context.Background(), bson.M{"_id": mongoId}).Decode(&todo)
-
-	if err != nil {
-		log.Println(err)
 		return model.Todo{}, err
 	}
 
 	return todo, nil
 }
 
-func (repo *DBTodoRepository) Create(entry model.Todo) error {
+func (repo *TodoCollection) Create(entry model.Todo) error {
 	_, err := repo.Collection.InsertOne(context.TODO(), model.Todo{
 		Title:       entry.Title,
 		Description: entry.Description,
@@ -71,21 +59,10 @@ func (repo *DBTodoRepository) Create(entry model.Todo) error {
 		UpdatedAt:   time.Now(),
 	})
 
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func (repo *DBTodoRepository) Update(id string, entry model.Todo) (*mongo.UpdateResult, error) {
-	mongoId, err := primitive.ObjectIDFromHex(id)
-
-	if err != nil {
-		return nil, err
-	}
-
+func (repo *TodoCollection) Update(id primitive.ObjectID, entry model.Todo) error {
 	update := bson.D{
 		{"$set", bson.D{
 			{"title", entry.Title},
@@ -94,37 +71,20 @@ func (repo *DBTodoRepository) Update(id string, entry model.Todo) (*mongo.Update
 		}},
 	}
 
-	res, err := repo.Collection.UpdateOne(
+	_, err := repo.Collection.UpdateOne(
 		context.Background(),
-		bson.M{"_id": mongoId},
+		bson.M{"_id": id},
 		update,
 	)
 
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return res, nil
+	return err
 }
 
-func (repo *DBTodoRepository) Delete(id string) error {
-	mongoId, err := primitive.ObjectIDFromHex(id)
-
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	_, err = repo.Collection.DeleteOne(
+func (repo *TodoCollection) Delete(id primitive.ObjectID) error {
+	_, err := repo.Collection.DeleteOne(
 		context.Background(),
-		bson.M{"_id": mongoId},
+		bson.M{"_id": id},
 	)
 
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	return nil
+	return err
 }
